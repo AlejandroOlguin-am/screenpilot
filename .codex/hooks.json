@@ -1,0 +1,4 @@
+{ "hooks": {
+  "SessionStart": [{ "hooks": [{ "type": "command", "command": "f=\"${HODOS_FLOW_DIR:-$HOME/bussines/hodos-flow}/scripts/session-start\"; [ -x \"$f\" ] && \"$f\" || true" }] }],
+  "Stop": [{ "hooks": [{ "type": "command", "command": "f=\"${HODOS_FLOW_DIR:-$HOME/bussines/hodos-flow}/scripts/on-stop\"; [ -x \"$f\" ] && \"$f\" || true" }] }]
+} }

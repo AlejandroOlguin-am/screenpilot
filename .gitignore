@@ -1,0 +1,14 @@
+# Memoria del proyecto (Hodos Flow §4): local, fuera de git
+memory/
+
+# Secretos y entorno
+.env
+
+# Python
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+
+# Salidas locales (capturas del smoke VNC, etc.)
+out/
