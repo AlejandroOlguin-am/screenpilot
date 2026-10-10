@@ -29,6 +29,7 @@ MAX_STEPS = int(os.environ.get("MAX_STEPS", "40"))
 DEADLINE_S = float(os.environ.get("AGENT_DEADLINE_S", "250"))  # main.py corta duro a 270
 SEND_IMAGE = os.environ.get("SEND_IMAGE", "1") == "1"
 HISTORY = 12
+TRACE_DIR = os.environ.get("TRACE_DIR", "")
 
 SYSTEM = """Eres ScreenPilot, un operador cuidadoso de aplicaciones de escritorio. Solo ves la pantalla
 (una lista numerada de textos y campos detectados por OCR, y una captura reducida con esos números)
@@ -178,13 +179,16 @@ class Agent:
                     return self._partial(f"Se alcanzó el tope de costo por tarea (US${b.max_cost:.2f}).")
                 b.steps += 1
                 t0 = time.monotonic()
+                msgs = self._messages(prims, warn)
                 try:
-                    step, cost = await call_llm(cli, self.model, self._messages(prims, warn))
+                    step, cost = await call_llm(cli, self.model, msgs)
                 except (httpx.HTTPError, ValueError, KeyError, json.JSONDecodeError) as e:
                     log.warning("paso %d: LLM falló (%s): %s", b.steps, self.model, e)
                     self._fail()
                     continue
                 b.cost += cost
+                t_llm = time.monotonic() - t0
+                self._trace(prims, msgs, step, t_llm)
                 warn = ""
                 accion = str(step.get("accion", "")).strip()
                 args = step.get("args") or {}
@@ -206,6 +210,18 @@ class Agent:
                 log.info("paso %d [%s] %s %s → %s · $%.4f · total $%.4f · %.1fs/%.0fs", b.steps, self.model,
                          accion, json.dumps(args, ensure_ascii=False)[:120], str(result)[:160], cost, b.cost,
                          time.monotonic() - t0, b.elapsed())
+
+    def _trace(self, prims: Primitives, msgs: list[dict], step: dict, t_llm: float) -> None:
+        if not TRACE_DIR:
+            return
+        from pathlib import Path
+        d = Path(TRACE_DIR)
+        d.mkdir(parents=True, exist_ok=True)
+        n = self.budget.steps
+        prims.screen.image.save(d / f"{n:02d}.png")
+        (d / f"{n:02d}.txt").write_text(msgs[1]["content"][0]["text"] + f"\n\n--- LLM ({t_llm:.1f}s, "
+                                        f"ocr {prims.screen.ocr_s:.1f}s) ---\n"
+                                        + json.dumps(step, ensure_ascii=False, indent=1))
 
     def _fail(self) -> None:
         self.fails += 1
