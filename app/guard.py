@@ -24,14 +24,15 @@ DESTRUCTIVE_INTENT = {
     "dar de baja": ("baja", "desactiv"),
 }
 CONFIRM = ("aplicar", "guardar", "confirmar", "grabar", "registrar", "enviar", "save", "apply",
-           "submit", "actualizar", "crear")
+           "submit", "actualizar")
+CONFIRM_EXACT = ("crear", "aceptar", "ok")
 CLICKS = ("click", "double_click")
 
 
 def _is_confirm(text: str) -> bool:
     t = norm(text)
-    # "Crear cliente" en una barra abre un formulario; solo cuenta como confirmar dentro de uno.
-    return any(t == w or t.startswith(w + " ") for w in CONFIRM)
+    # "Crear cliente" en una barra abre un formulario (no confirma); "Crear" a secas sí.
+    return t in CONFIRM_EXACT or any(t == w or t.startswith(w + " ") for w in CONFIRM)
 
 
 def form_signature(screen: Screen) -> str:

@@ -186,11 +186,12 @@ class VNCSession:
                             raw = await self._read(w * h * 4)
                             px = np.frombuffer(raw, dtype=np.uint8).reshape(h, w, 4)
                             self.fb[y:y + h, x:x + w] = px[:, :, 2::-1]
-                            changed = changed or (w * h > 0)
+                            # El cursor de texto parpadea (rectángulos de pocos px): no cuenta como repintado.
+                            changed = changed or (w * h > 150 and w > 3)
                         elif enc == 1:
                             sx, sy = struct.unpack(">HH", await self._read(4))
                             self.fb[y:y + h, x:x + w] = self.fb[sy:sy + h, sx:sx + w].copy()
-                            changed = True
+                            changed = changed or (w * h > 150 and w > 3)
                         else:
                             raise VNCError(f"encoding inesperado {enc}")
                     if changed:

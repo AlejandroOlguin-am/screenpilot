@@ -69,3 +69,10 @@ def test_bucle_trabado():
     assert not g.stuck("click", {"n": 1}, scr)
     assert not g.stuck("click", {"n": 1}, scr)
     assert g.stuck("click", {"n": 1}, scr)
+
+
+def test_crear_en_barra_no_cuenta_como_guardar():
+    els = [el(1, "", "campo", "Nombre"), el(2, "Crear cliente")]
+    scr, g = Screen(els), Guard("Registra al cliente X")
+    g.executed("click", {"n": 2}, scr.get(2), scr)
+    assert g.check("click", {"n": 2}, scr.get(2), scr) is None

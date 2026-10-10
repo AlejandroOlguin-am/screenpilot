@@ -7,6 +7,7 @@ observado (que vuelve al LLM en el paso siguiente).
 from __future__ import annotations
 
 import asyncio
+import difflib
 import logging
 import time
 
@@ -92,13 +93,15 @@ class Primitives:
             await self.vnc.type_text(texto)
         else:
             await self.vnc.key("backspace")
+        await self.park_mouse()
         await self.observe(t)
         # Releer el campo: la caja más parecida en posición.
         same = [e for e in self.screen.elements if e.kind == "campo"
                 and abs(e.x - el.x) < 12 and abs(e.y - el.y) < 12]
         if same:
             got = same[0].text
-            ok = squash(texto) in squash(got) or squash(got) in squash(texto) and len(squash(got)) > 3
+            # El OCR confunde letras sueltas (`Distribucion]s`): se acepta un parecido alto.
+            ok = difflib.SequenceMatcher(None, squash(texto), squash(got)).ratio() >= 0.8
             return (f"escrito en [{n}] «{el.label}»; el campo ahora muestra «{got}»"
                     + ("" if ok or not texto else " (no coincide con lo pedido: revisa)"))
         return f"escrito «{texto}» en [{n}] «{el.label}» (no pude releer el campo)"
@@ -131,8 +134,12 @@ class Primitives:
         same = [e for e in self.screen.elements if e.kind == "campo"
                 and abs(e.x - el.x) < 12 and abs(e.y - el.y) < 12]
         got = same[0].text if same else "?"
-        ok = squash(got) == q
+        ok = difflib.SequenceMatcher(None, squash(got), q).ratio() >= 0.8
         return f"opción en [{n}] «{el.label}»: ahora muestra «{got}»" + ("" if ok else " (no coincide: revisa)")
+
+    async def park_mouse(self) -> None:
+        """El puntero sobre el campo tapa letras y el OCR lee mal (`Ruiz` → `RiJiz`)."""
+        await self.vnc.move(self.vnc.width - 2, self.vnc.height - 2)
 
     async def key(self, nombre: str) -> str:
         t = time.monotonic()

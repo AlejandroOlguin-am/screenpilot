@@ -49,9 +49,14 @@ Oficio:
 - Para escribir usa type_into sobre el CAMPO (no sobre su etiqueta). Escribe el texto EXACTO de la
   tarea, con tildes. Para listas desplegables usa select_option.
 - Pulsa el botón de guardar/aplicar UNA sola vez. Luego verifica por evidencia (mensaje, la lista, la
-  bitácora). En esta app guardar puede no cerrar el formulario: eso no significa que falló.
+  bitácora). En esta app guardar puede no cerrar el formulario: eso no significa que falló. Si
+  después encuentras el registro con los datos pedidos, la tarea está TERMINADA (no es un duplicado:
+  es el que acabas de crear).
 - Para contar o responder sobre registros: filtra si se puede, luego read_table (con el número del
   botón de página siguiente si hay que recorrer todas las páginas; sin él lee solo la página visible) y count_rows con filtros exactos. Nunca cuentes a ojo.
+- Para abrir un registro de una tabla, haz clic en su enlace (normalmente el código de la fila).
+  Si un clic no cambia la pantalla, no lo repitas igual: prueba otro elemento de la misma fila.
+- El OCR puede leer mal alguna letra de lo que escribiste; si el valor se parece, no lo reescribas.
 - Exporta con exactamente los filtros pedidos, ni uno más.
 - "Hoy" es la fecha del encabezado de la app, no la tuya.
 - Si la tarea es peligrosa, ambigua o imposible con lo que hay en pantalla: fallida sin tocar nada.
