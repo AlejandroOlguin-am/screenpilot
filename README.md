@@ -13,7 +13,7 @@ natural. Frontier BOG/26 · Reto 1. Arquitectura: `docs/system-architecture.md`.
 |---|---|
 | `TEAM_TOKEN` | Bearer que exige nuestro API |
 | `OPENROUTER_API_KEY` | LLMs |
-| `DESKTOP_URL` | `wss://<escritorio>/websockify` (solo para pruebas locales) |
+| `DESKTOP_URL` | `wss://<host del escritorio>/websockify` — el mismo host de la tarjeta, con `wss://` y `/websockify` (solo pruebas locales) |
 | `DESKTOP_PASSWORD` | Contraseña del escritorio (solo para pruebas locales) |
 | `DESKTOP_TOKEN` | Token del escritorio para `/__reset` y `/__check` (solo harness) |
 | `MAX_COST_PER_TASK` | Tope de gasto por tarea en US$ (por defecto 0.30) |
@@ -47,13 +47,14 @@ Leer un fallo del harness: la columna `check` viene de `/__check` (estado de la 
 `resumen` los valida el harness con las reglas del README del reto.
 
 ## Desplegar (Cloud Run)
+URL pública: `https://screenpilot-934756554303.us-east1.run.app` (proyecto `mvps-london`).
 ```bash
-gcloud run deploy screenpilot --project mvps-london --source . --region us-east1 \
-  --no-cpu-throttling --min-instances 1 --max-instances 1 \
-  --cpu 2 --memory 2Gi --timeout 300 --allow-unauthenticated \
-  --set-secrets TEAM_TOKEN=TEAM_TOKEN:latest,OPENROUTER_API_KEY=OPENROUTER_API_KEY:latest
-python scripts/eval.py --target https://<url-de-cloud-run>
+scripts/deploy.sh                       # build + deploy + /health
+python scripts/eval.py --target https://screenpilot-934756554303.us-east1.run.app
 ```
+Sin CI de deploy: se despliega a mano cuando hace falta (decisión por tiempo, 10-oct).
+Secretos en Secret Manager: `TEAM_TOKEN`, `OPENROUTER_API_KEY` (rotar con
+`gcloud secrets versions add`).
 
 ## Trampas
 1. Sin `--no-cpu-throttling` las tareas en segundo plano se congelan.

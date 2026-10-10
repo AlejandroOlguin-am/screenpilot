@@ -1,0 +1,10 @@
+.git
+.venv
+.env
+memory
+out
+experiments
+docs
+tests
+pruebas
+**/__pycache__
