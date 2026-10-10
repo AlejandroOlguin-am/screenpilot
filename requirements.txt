@@ -6,3 +6,4 @@ pillow==11.*
 numpy==2.*
 pycryptodome==3.*
 pytest==8.*
+rapidocr-onnxruntime==1.4.4

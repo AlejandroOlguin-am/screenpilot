@@ -232,6 +232,14 @@ class VNCSession:
                 return
             await asyncio.sleep(0.05)
 
+    async def settle(self, since: float, first_change: float = 1.5) -> None:
+        """Tras una acción: espera a que la pantalla empiece a cambiar (hasta `first_change` s)
+        y luego a que se quede quieta. Sin esto, se captura antes de que la app repinte."""
+        start = time.monotonic()
+        while self.last_change <= since and time.monotonic() - start < first_change:
+            await asyncio.sleep(0.05)
+        await self.wait_stable(min_wait=0.1)
+
     def capture(self) -> Image.Image:
         return Image.fromarray(self.fb.copy(), "RGB")
 
