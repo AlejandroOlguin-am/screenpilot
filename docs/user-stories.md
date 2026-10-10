@@ -5,11 +5,11 @@
 > Estados: ⬜ pendiente · 🟡 en curso · 🔍 en review · ✅ hecho · ↪ backlog.
 
 ## Ahora
-**Tanda en curso:** T0 Base · rama `t0-base`. Entrega dura: **20:00 (Bogotá)**.
+**Tanda en curso:** T1 Ver, decidir, actuar · rama `t0-base` (T0 cerrada 17:15). Entrega dura: **20:00 (Bogotá)**.
 
 | Tanda | Hora objetivo | Historias | Estado |
 |---|---|---|---|
-| T0 Base | 16:50 → 17:40 | SP-01, SP-02, SP-03, SP-04 | ⬜ |
+| T0 Base | 16:50 → 17:40 | SP-01, SP-02, SP-03, SP-04 | ✅ 17:15 |
 | T1 Ver, decidir, actuar | 17:40 → 18:40 | SP-05, SP-06, SP-07 | ⬜ |
 | T2 Ejemplos en verde | 18:40 → 19:20 | SP-08, SP-09 | ⬜ |
 | T3 Cierre | 19:20 → 20:00 | SP-10, SP-11 | ⬜ |
