@@ -43,3 +43,15 @@ def test_flujo_en_curso_luego_final(client):
 
 def test_id_desconocido_es_404(client):
     assert client.get("/tasks/nope", headers=AUTH).status_code == 404
+
+
+def test_corte_duro_de_tiempo(client, monkeypatch):
+    """Si el worker se pasa del plazo (270 s en producción), queda fallida y sin respuesta."""
+    monkeypatch.setenv("FAKE_TASK_S", "3")
+    monkeypatch.setattr(main, "TASK_DEADLINE_S", 0.3)
+    tid = client.post("/tasks", json=BODY, headers=AUTH).json()["task_id"]
+    deadline = time.monotonic() + 3
+    while (j := client.get(f"/tasks/{tid}", headers=AUTH).json())["estado"] == "en_curso":
+        assert time.monotonic() < deadline
+        time.sleep(0.1)
+    assert j["estado"] == "fallida" and "respuesta:" not in j["resumen"]
