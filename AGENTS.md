@@ -5,8 +5,9 @@
 
 ## Qué es
 Agente que opera apps sin API **solo por pantalla (VNC)** y ejecuta tareas en lenguaje natural.
-Se evalúa con un set oculto sobre **otra app que nunca vio**. Contexto: `docs/product-overview.md`.
-Arquitectura y decisiones: `docs/system-architecture.md`. Plan: `docs/user-stories.md`.
+Se evalúa con un set oculto sobre **otra app que nunca vio**. Contexto: `docs/product-overview.md`. Reglas oficiales del reto:
+`docs/challenge-readme.md`; tareas de práctica: `pruebas/`.
+Arquitectura, primitivas y guard: `docs/system-architecture.md`. Plan: `docs/user-stories.md`.
 Dónde estamos: `memory/current-state.md` (leer al empezar).
 
 ## Reglas duras (fallan la evaluación si se rompen)
@@ -28,8 +29,9 @@ Dónde estamos: `memory/current-state.md` (leer al empezar).
 8. **Sin coordenadas fijas ni etiquetas escritas a mano** de la app de pruebas. Todo se encuentra
    por texto en pantalla y significado. La app de pruebas **cambia** (incidente de las 15:30).
 9. **"Hoy"** es la fecha del encabezado de la app, no la del servidor.
-10. Prohibido usar agentes de terceros que operen pantallas (Browser Use, Operator, etc.).
-    LLMs vía OpenRouter sí.
+10. Prohibido usar agentes de terceros que operen pantallas (Browser Use, Operator, etc.) y las
+    APIs de "computer use" nativas de un modelo. LLMs normales vía OpenRouter sí: el LLM elige
+    una primitiva nuestra por número de elemento, nunca da coordenadas.
 
 ## Mecánica de VNC (medida)
 - Clic: bajar → esperar **≥ 120 ms** → soltar (con < 100 ms se ignora).
@@ -38,7 +40,8 @@ Dónde estamos: `memory/current-state.md` (leer al empezar).
 
 ## Stack
 Python 3.12 · FastAPI + uvicorn · asyncio · cliente VNC sobre puente wss→TCP · OCR (Tesseract o
-RapidOCR, ver experimento) · OpenCV · OpenRouter · Docker · Cloud Run.
+RapidOCR, ver `experiments/2026-10-10-vnc-perception.md`) · OpenCV · OpenRouter · Docker ·
+Cloud Run (proyecto GCP `mvps-london`). **Sin base de datos:** tareas en memoria (1 instancia).
 
 ## Trabajo
 - Nombres de archivos e identificadores en inglés; contenido y commits en español.

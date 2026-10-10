@@ -39,7 +39,7 @@ curl -s localhost:8080/tasks/<task_id> -H "Authorization: Bearer $TEAM_TOKEN"
 ## Tests
 | Nivel | Comando | Qué cubre |
 |---|---|---|
-| Unit | `pytest tests/unit` | redacción de secretos, formato del resumen, parser de fechas, coincidencia exacta, percepción sobre PNG fijos |
+| Unit | `pytest tests/unit` | redacción de secretos, formato del resumen, guard, coincidencia exacta, percepción sobre PNG fijos |
 | Canal VNC | `python scripts/vnc_smoke.py` | conecta, captura, clic, escribe (deja PNG en `out/`) |
 | Evaluación | `python scripts/eval.py --target http://localhost:8080` | `/__reset` → tarea → `/__check` + estado + resumen; tabla en `experiments/` |
 
@@ -48,7 +48,7 @@ Leer un fallo del harness: la columna `check` viene de `/__check` (estado de la 
 
 ## Desplegar (Cloud Run)
 ```bash
-gcloud run deploy screenpilot --source . --region us-east1 \
+gcloud run deploy screenpilot --project mvps-london --source . --region us-east1 \
   --no-cpu-throttling --min-instances 1 --max-instances 1 \
   --cpu 2 --memory 2Gi --timeout 300 --allow-unauthenticated \
   --set-secrets TEAM_TOKEN=TEAM_TOKEN:latest,OPENROUTER_API_KEY=OPENROUTER_API_KEY:latest

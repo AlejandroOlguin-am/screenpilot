@@ -1,104 +1,93 @@
 # User stories — ScreenPilot
 
+> **Versión:** 0.2 · **Última actualización:** 2026-10-10 16:50 · **Fuente de verdad de:** qué se
+> construye y en qué orden. El estado vivo va en `memory/current-state.md`.
+> Estados: ⬜ pendiente · 🟡 en curso · 🔍 en review · ✅ hecho · ↪ backlog.
+
 ## Ahora
-**Tanda en curso:** T0 (conexión + esqueleto desplegado). Entrega dura: **20:00**.
+**Tanda en curso:** T0 Base · rama `t0-base`. Entrega dura: **20:00 (Bogotá)**.
 
 | Tanda | Hora objetivo | Historias | Estado |
 |---|---|---|---|
-| T0 Base | 16:30 → 17:15 | SP-01, SP-02, SP-03, SP-04 | ⚪ |
-| T1 Ver y actuar | 17:15 → 18:15 | SP-05, SP-06, SP-07 | ⚪ |
-| T2 Formas | 18:15 → 19:15 | SP-08, SP-09, SP-10, SP-11, SP-12 | ⚪ |
-| T3 Cierre | 19:15 → 20:00 | SP-13, SP-14 | ⚪ |
+| T0 Base | 16:50 → 17:40 | SP-01, SP-02, SP-03, SP-04 | ⬜ |
+| T1 Ver, decidir, actuar | 17:40 → 18:40 | SP-05, SP-06, SP-07 | ⬜ |
+| T2 Ejemplos en verde | 18:40 → 19:20 | SP-08, SP-09 | ⬜ |
+| T3 Cierre | 19:20 → 20:00 | SP-10, SP-11 | ⬜ |
 
-**Regla de recorte:** si a las 18:45 una forma no pasa, se deja con `fallida` honesta y se pasa a
-la siguiente. Un falso éxito cuesta más que una falla declarada.
-
-**Criterios comunes a todas:** cumplen `AGENTS.md` (reglas duras 1–10). "Hecho" = el harness
-(SP-04) lo muestra en verde contra el escritorio propio.
+**Regla de recorte:** a las 19:00 lo que no pasa se deja como `fallida` honesta.
+**Criterios comunes:** cumplen `AGENTS.md`. "Hecho" = el harness (SP-04) lo muestra en verde.
 
 ---
 
 <details open><summary><b>T0 — Base</b></summary>
 
 **SP-01 — Contrato del API** · P0 · S
-Criterios: `/health` 200; `POST /tasks` < 2 s con 401 sin token; `GET` devuelve
-`en_curso` mientras corre una tarea falsa de 10 s y luego `terminada`.
-Qué probar: `curl` de los tres endpoints local y en Cloud Run.
+Criterios: `/health` 200; `POST /tasks` < 2 s, 401 sin token; `GET` devuelve `en_curso` mientras
+corre una tarea falsa de 10 s y luego `terminada`; 404 para id desconocido.
+Qué probar: `curl` de los tres endpoints, local y en Cloud Run.
 
 **SP-02 — Deploy en Cloud Run** · P0 · S
-Criterios: imagen construida, secretos montados, URL pública responde `/health`, y la CPU sigue
-corriendo en segundo plano (la tarea falsa termina aunque nadie consulte).
+Criterios: imagen construida, secretos montados, URL pública responde `/health`, la tarea falsa
+termina aunque nadie consulte (CPU sin throttling).
 Qué probar: `POST` → esperar 15 s sin consultar → `GET` = `terminada`.
 
-**SP-03 — Puente wss y sesión VNC** · P0 · M · *experimento corto*
-Criterios: con la URL y la contraseña del escritorio propio: conectar, capturar PNG 1280×800,
-clic con 120 ms, escribir con Ctrl+A previo, `wait_stable`. Una prueba abre Comercial ▸ Maestros ▸
-Clientes por coordenadas *solo para validar el canal*.
-Qué probar: script `scripts/vnc_smoke.py` guarda `before.png` / `after.png`.
-Riesgo: la librería VNC (asyncvnc o vncdotool) y su auth; decidir en ≤ 30 min o pasar a Playwright.
+**SP-03 — Cliente VNC sobre websocket** · P0 · M
+Criterios: con la URL y contraseña del escritorio propio: conectar, capturar PNG 1280×800, clic
+con 120 ms, escribir con Ctrl+A previo, `wait_stable`.
+Qué probar: `scripts/vnc_smoke.py` guarda `out/before.png` y `out/after.png` (tras un clic).
+Riesgo: auth VNC y librería; decidir en ≤ 30 min (`experiments/2026-10-10-vnc-perception.md`).
 
 **SP-04 — Harness de evaluación** · P0 · S
 Criterios: `scripts/eval.py --target <url>` corre `pruebas/*.json`: `/__reset` (token del
-escritorio) → `POST /tasks` → poll cada 5 s → `/__check` con el JSON → valida estado,
-`respuesta:` y `claves_razon` → tabla en `experiments/<fecha>-eval/`.
-Qué probar: con el agente "siempre fallida" la tabla sale completa y casi todo en rojo.
+escritorio) → `POST /tasks` → poll cada 5 s → `/__check` → valida estado, `respuesta:` y
+`claves_razon` → tabla en `experiments/<fecha>-eval/`.
+Qué probar: con el agente falso la tabla sale completa (casi todo en rojo).
 </details>
 
-<details open><summary><b>T1 — Ver y actuar</b></summary>
+<details open><summary><b>T1 — Ver, decidir, actuar</b></summary>
 
-**SP-05 — Percepción (OCR → elementos)** · P0 · M
-Criterios: sobre capturas reales de v4.2, encuentra `Filtrar`, `Crear cliente`, `Aplicar`,
-`Cerrar`, las etiquetas de campo y las filas de la tabla con su texto; detecta el modal.
-Qué probar: fixtures PNG en `tests/fixtures/` + test unitario por pantalla.
+**SP-05 — Percepción: `observe()`** · P0 · M
+Criterios: sobre capturas reales: elementos numerados con texto y caja (menús, `Filtrar`,
+`Crear cliente`, `Aplicar`, etiquetas de campo, filas); detecta el modal; lee la fecha del
+encabezado.
+Qué probar: fixtures PNG en `tests/fixtures/` + test unitario; tiempo por captura < 1,5 s.
 
-**SP-06 — Primitivas + gestor de modales** · P0 · M
-Criterios: `open_menu(["Comercial","Maestros","Clientes"])`, `click_label`, `fill_field`,
-`read_table` + `next_page` hasta que `Siguiente` esté deshabilitado, `dismiss_modal` (lee el
-texto y pulsa el botón no destructivo).
-Qué probar: tras `/__reset` aparece el modal v4.2 → se cierra → se llega a Clientes.
+**SP-06 — Primitivas + bucle del agente** · P0 · L
+Criterios: las primitivas de arquitectura §4; el bucle llama a OpenRouter con JSON por paso;
+presupuesto de 270 s, 40 pasos y costo; log de cada paso (acción, costo, tiempo).
+Qué probar: tarea "abre la lista de clientes y dime cuántos hay en la primera página" llega a
+`finish` sola en el escritorio propio.
 
-**SP-07 — Huella y mapa de la app** · P1 · M
-Criterios: primera vez: recorre menús y submenús (hover) y guarda el árbol; etiquetas semánticas
-por LLM (`buscar→Filtrar`, `guardar→Aplicar`, `crear→Crear cliente`); log "app nueva / versión
-nueva detectada". Segunda vez: carga de caché, 0 llamadas.
-Qué probar: correr dos tareas seguidas y comparar tiempos y costo.
+**SP-07 — Guard + resumen** · P0 · M
+Criterios: test de `redact()` (contraseña, token, `SGC-…`); clic destructivo bloqueado; segundo
+"guardar" bloqueado; corte a 270 s; formato `respuesta:` / `motivo:`.
+Qué probar: `pytest tests/unit`.
 </details>
 
-<details open><summary><b>T2 — Formas</b> (cada una cierra con su ejemplo en verde)</summary>
+<details open><summary><b>T2 — Ejemplos en verde</b></summary>
 
-**SP-08 — Planner de intención** · P0 · S · *1 llamada LLM*
-Criterios: E1–E5 y 10 paráfrasis producen la intención correcta (test con respuestas grabadas).
+**SP-08 — E1–E5 en verde** · P0 · M
+Criterios: harness local con los 5 en verde (check + estado + resumen). Cada fallo con su
+categoría (percepción, decisión, tiempo, modal, verificación); se ataca la más grande primero.
 
-**SP-09 — Consultar (E3)** · P0 · M
-Criterios: `respuesta: 45`; coincidencia exacta excluye "Ferretería Ruiz e Hijos"; usa la columna
-Estado, no fechas.
-
-**SP-10 — Actualizar + rechazo por ambigüedad (E2, E5)** · P0 · M
-Criterios: E2 cambia solo Dirección de CL-0007, ignora la nota inyectada, `Aplicar` una vez,
-verifica en Bitácora. E5 → `fallida`, resumen con `52345678` y `1019876543`, cero cambios.
-
-**SP-11 — Crear (E1)** · P0 · M
-Criterios: busca duplicado → `Crear cliente` → 4 campos (Ciudad es lista) → `Aplicar` una vez →
-verifica. Sin duplicado aunque el formulario quede abierto (v4.2).
-
-**SP-12 — Exportar (E4)** · P1 · S
-Criterios: filtros exactos Entregado, 01/09/2026 a 30/09/2026 → `Exportar` → aparece en
-"Reportes generados".
+**SP-09 — Generalización** · P0 · S
+Criterios: 2 paráfrasis con valores nuevos + 1 pregunta con fecha relativa, inventadas, en verde
+(la verificación de estas se hace a mano en la app si `/__check` no las cubre).
 </details>
 
 <details open><summary><b>T3 — Cierre</b></summary>
 
-**SP-13 — Guard + resumen + explorer de respaldo** · P0 · M
-Criterios: test de redacción (contraseña, `SGC-…` y similares); botones bloqueados; corte a 270 s;
-explorer LLM para forma "otra" con máx. 30 pasos.
+**SP-10 — Deploy final y corrida pública** · P0 · S
+Criterios: deploy verde; harness completo contra la URL pública; tabla en `experiments/`.
 
-**SP-14 — Entrega** · P0 · S
-Criterios: repo público con README; deploy final verde; harness completo contra la URL pública;
-video de 2 min (problema → arquitectura → demo de E3 y E5 → incidente v3.9→v4.2 detectado y
-resuelto → métricas); las tres URLs cargadas en Frontier antes de las 20:00.
+**SP-11 — Entrega** · P0 · S
+Criterios: README al día; video de 2 min (problema → arquitectura → demo E3 y E5 → incidente
+v4.2 resuelto sin tocar código → métricas); repo, URL y video cargados en Frontier antes de las 20:00.
 </details>
 
 ## Backlog
-- Memoria persistente en GCS entre reinicios.
-- Rutas grabadas desde corridas del explorer (aprender de lo que funcionó) y ranking por uso.
-- Paráfrasis y tareas nuevas generadas para el harness (20+ casos).
+| Idea | Por qué espera | Se reabre cuando… |
+|---|---|---|
+| Playbooks deterministas por forma | Recortado por tiempo | El bucle pasa todo y sobra tiempo para bajar costo |
+| Mapa de app persistente / huella | La app y el escritorio cambian entre tareas | Hay muchas tareas sobre la misma app |
+| Rutas aprendidas de corridas exitosas | Requiere persistencia y router | Después del reto |

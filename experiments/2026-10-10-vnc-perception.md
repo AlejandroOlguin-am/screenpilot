@@ -27,3 +27,5 @@
 ## Decisión
 (completar: librería VNC, motor OCR, modelo por defecto y de respaldo)
 Si el canal directo no funciona en 30 min → Playwright con la página noVNC (plan B aprobado).
+La hipótesis 3 cambia con la v0.2: el LLM elige el elemento por número dentro del bucle (no solo
+etiquetas semánticas); se mide como aciertos por paso en SP-06.

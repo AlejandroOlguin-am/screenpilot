@@ -1,6 +1,6 @@
 # SIGECOM v3.9 → v4.2: qué cambió con el incidente FR-0153
 
-> Medido en el escritorio propio el 10-oct ~16:15. Base: `sigecom-v3.9-baseline.md`.
+> Medido en el escritorio propio el 10-oct ~16:15 (la línea base v3.9 no se escribió; la tabla la resume).
 > Sirve como **evidencia para el video y el debrief**, y como caso de prueba de robustez.
 > **No se hardcodea nada de esto en el agente**: el agente debe resolverlo solo.
 
