@@ -106,17 +106,35 @@ class Primitives:
                     + ("" if ok or not texto else " (no coincide con lo pedido: revisa)"))
         return f"escrito «{texto}» en [{n}] «{el.label}» (no pude releer el campo)"
 
+    def _field_at(self, el: Element) -> Element | None:
+        same = [e for e in self.screen.elements if e.kind == "campo"
+                and abs(e.x - el.x) < 12 and abs(e.y - el.y) < 12]
+        if same:
+            return same[0]
+        # Con la lista abierta la caja no se detecta: el texto que quede dentro de su área.
+        inside = [e for e in self.screen.elements if e.kind == "texto"
+                  and el.x <= e.center[0] <= el.x + el.w and el.y <= e.center[1] <= el.y + el.h]
+        return Element(el.n, " ".join(e.text for e in inside), el.x, el.y, el.w, el.h, "campo") if inside else None
+
+    def _options(self, el: Element, q: str) -> list[Element]:
+        below = [e for e in self.screen.elements if e.kind == "texto"
+                 and not (abs(e.y - el.y) < 8 and abs(e.x - el.x) < 30)]
+        opts = [e for e in below if squash(e.text) == q]
+        if not opts:
+            opts = [e for e in below if q and q in squash(e.text) and e.y > el.y - 300]
+        return opts
+
     async def select_option(self, n, texto: str) -> str:
         el = self.element(n)
+        q = squash(str(texto))
         t = time.monotonic()
         await self.vnc.click(*el.center)
-        scr = await self.observe(t)
-        q = squash(str(texto))
-        opts = [e for e in scr.elements if e.kind == "texto" and squash(e.text) == q
-                and not (abs(e.y - el.y) < 6 and abs(e.x - el.x) < 30)]
+        await self.observe(t)
+        opts = self._options(el, q)
         if not opts:
-            opts = [e for e in scr.elements if e.kind == "texto" and q and q in squash(e.text)
-                    and e.y > el.y - 300]
+            await asyncio.sleep(0.5)
+            await self.observe()
+            opts = self._options(el, q)
         if opts:
             # La opción más cercana a la lista abierta.
             opt = min(opts, key=lambda e: abs(e.y - el.y) + abs(e.x - el.x))
@@ -124,17 +142,25 @@ class Primitives:
             await self.vnc.click(*opt.center)
             await self.observe(t)
         else:
-            # Lista nativa que no se ve: elegir con el teclado (escribir el texto y Enter).
+            # Lista nativa que no se ve: con el foco en la lista, escribir el texto la selecciona.
+            # (Enter en una lista cerrada la vuelve a abrir.)
             await self.vnc.key("escape")
             await asyncio.sleep(0.2)
             t = time.monotonic()
             await self.vnc.type_text(str(texto))
-            await self.vnc.key("enter")
             await self.observe(t)
-        same = [e for e in self.screen.elements if e.kind == "campo"
-                and abs(e.x - el.x) < 12 and abs(e.y - el.y) < 12]
-        got = same[0].text if same else "?"
+        await self.park_mouse()
+        f = self._field_at(el)
+        got = f.text if f else "?"
         ok = difflib.SequenceMatcher(None, squash(got), q).ratio() >= 0.8
+        if not ok and self._options(el, q):
+            # La lista quedó abierta: Escape la cierra conservando lo resaltado.
+            t = time.monotonic()
+            await self.vnc.key("escape")
+            await self.observe(t)
+            f = self._field_at(el)
+            got = f.text if f else "?"
+            ok = difflib.SequenceMatcher(None, squash(got), q).ratio() >= 0.8
         return f"opción en [{n}] «{el.label}»: ahora muestra «{got}»" + ("" if ok else " (no coincide: revisa)")
 
     async def park_mouse(self) -> None:
