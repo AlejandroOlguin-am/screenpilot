@@ -22,7 +22,18 @@
   contra 2 o 3 modelos baratos. Medir aciertos, latencia y costo.
 
 ## Resultado
-(completar: tablas con los números)
+**Canal (17:10):** RFB propio sobre websocket (`app/vnc.py`), sin puente ni librería VNC. Conecta
+en ~5 s, `wait_stable` 0,6–2 s por acción, clic con 120 ms, tildes y Ctrl+A funcionan. ✅
+
+**OCR (17:20), RapidOCR (onnxruntime, pip), 2 capturas reales:**
+| Medida | Resultado |
+|---|---|
+| Tiempo por captura 1280×800 (CPU local) | 1,2–1,4 s |
+| Elementos | ~145 por pantalla de tabla |
+| Etiquetas y botones (`Filtrar`, `Exportar`, menús, encabezados) | todas, posición correcta |
+| Tildes | **se pierden** (`Ferreteria`, `Gomez`, `Codigo`) |
+| Errores puntuales | `0perador2`, el valor de un select (`Todos` → `sopol`) |
+Tesseract no se midió: requiere `sudo apt` local (no disponible).
 
 ## Decisión
 (completar: librería VNC, motor OCR, modelo por defecto y de respaldo)
