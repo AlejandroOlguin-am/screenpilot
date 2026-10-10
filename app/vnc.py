@@ -184,10 +184,15 @@ class VNCSession:
                         x, y, w, h, enc = struct.unpack(">HHHHi", await self._read(12))
                         if enc == 0:
                             raw = await self._read(w * h * 4)
-                            px = np.frombuffer(raw, dtype=np.uint8).reshape(h, w, 4)
-                            self.fb[y:y + h, x:x + w] = px[:, :, 2::-1]
-                            # El cursor de texto parpadea (rectángulos de pocos px): no cuenta como repintado.
-                            changed = changed or (w * h > 150 and w > 3)
+                            px = np.frombuffer(raw, dtype=np.uint8).reshape(h, w, 4)[:, :, 2::-1]
+                            # El cursor de texto parpadea: el servidor manda un rectángulo mayor, pero
+                            # cambia una columna de 1-2 px. Solo cuenta lo que de verdad cambió.
+                            if not changed and w * h > 150:
+                                diff = (self.fb[y:y + h, x:x + w] != px).any(axis=2)
+                                if diff.any():
+                                    cols = diff.any(axis=0).nonzero()[0]
+                                    changed = (cols[-1] - cols[0] > 3) or diff.sum() > 150
+                            self.fb[y:y + h, x:x + w] = px
                         elif enc == 1:
                             sx, sy = struct.unpack(">HH", await self._read(4))
                             self.fb[y:y + h, x:x + w] = self.fb[sy:sy + h, sx:sx + w].copy()
